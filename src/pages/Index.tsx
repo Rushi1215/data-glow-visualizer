@@ -1,8 +1,8 @@
 
-import { Redirect } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 
 const Index = () => {
-  return <Redirect to="/" />;
+  return <Navigate to="/" replace />;
 };
 
 export default Index;
