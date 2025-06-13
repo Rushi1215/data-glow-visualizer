@@ -2,7 +2,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { Sparkles } from 'lucide-react';
 
 interface DataGlowLayoutProps {
   children: React.ReactNode;
@@ -19,16 +18,26 @@ const DataGlowLayout: React.FC<DataGlowLayoutProps> = ({ children }) => {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col font-afacad">
       <header className="border-b sticky top-0 bg-background/80 backdrop-blur-sm z-10">
         <div className="container py-4 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="size-10 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center">
-              <Sparkles className="size-6" />
+          <Link to="/" className="flex items-center gap-3">
+            <div className="relative">
+              <img 
+                src="/lovable-uploads/7059121f-19a5-499a-8aa8-4aa20188f8be.png" 
+                alt="The Baap Company Logo" 
+                className="size-12 rounded-full object-contain animate-baap-glow"
+              />
+              <div className="absolute inset-0 rounded-full bg-baap-gradient opacity-20 animate-pulse-light"></div>
             </div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              DataGlow
-            </h1>
+            <div className="flex flex-col">
+              <h1 className="text-2xl font-bold bg-baap-gradient bg-clip-text text-transparent">
+                BaapGlow
+              </h1>
+              <p className="text-xs text-muted-foreground font-medium tracking-wide">
+                BY THE BAAP COMPANY
+              </p>
+            </div>
           </Link>
           
           <nav className="hidden md:flex">
@@ -45,18 +54,18 @@ const DataGlowLayout: React.FC<DataGlowLayoutProps> = ({ children }) => {
                     <Link 
                       to={isDisabled ? "#" : step.path}
                       className={cn(
-                        "flex items-center gap-2 text-sm font-medium transition-colors",
+                        "flex items-center gap-2 text-sm font-medium transition-colors font-afacad",
                         isActive 
-                          ? "text-primary" 
+                          ? "text-baap-600" 
                           : isDisabled 
                             ? "text-muted-foreground cursor-not-allowed" 
-                            : "text-foreground/70 hover:text-foreground"
+                            : "text-foreground/70 hover:text-baap-600"
                       )}
                       onClick={e => isDisabled && e.preventDefault()}
                     >
                       <div className={cn(
-                        "size-6 rounded-full border flex items-center justify-center",
-                        isActive ? "border-primary text-primary" : "border-muted-foreground text-muted-foreground"
+                        "size-6 rounded-full border flex items-center justify-center font-semibold",
+                        isActive ? "border-baap-600 text-baap-600 bg-baap-50" : "border-muted-foreground text-muted-foreground"
                       )}>
                         {index + 1}
                       </div>
@@ -74,9 +83,23 @@ const DataGlowLayout: React.FC<DataGlowLayoutProps> = ({ children }) => {
         {children}
       </main>
       
-      <footer className="border-t py-6">
-        <div className="container text-center text-sm text-muted-foreground">
-          DataGlow &copy; {new Date().getFullYear()} - Data Cleaning & Visualization Tool
+      <footer className="border-t py-6 bg-gradient-to-r from-baap-50 to-baap-100">
+        <div className="container">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <img 
+                src="/lovable-uploads/ed91df16-69f7-4345-b233-5796bbb3ffcd.png" 
+                alt="The Baap Company" 
+                className="h-8 object-contain"
+              />
+            </div>
+            <div className="text-center text-sm text-baap-700 font-medium">
+              BaapGlow &copy; {new Date().getFullYear()} - Professional Data Solutions by The Baap Company
+            </div>
+            <div className="text-xs text-baap-600 font-medium">
+              BUSINESS APPLICATIONS AND PLATFORMS
+            </div>
+          </div>
         </div>
       </footer>
     </div>

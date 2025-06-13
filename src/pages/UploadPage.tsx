@@ -198,29 +198,47 @@ const UploadPage: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="text-center space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Upload Your Data</h1>
-        <p className="text-muted-foreground">
-          Start by uploading a CSV or Excel file to clean and visualize your data
+      <div className="text-center space-y-4">
+        <div className="flex items-center justify-center gap-4 mb-6">
+          <img 
+            src="/lovable-uploads/7059121f-19a5-499a-8aa8-4aa20188f8be.png" 
+            alt="The Baap Company" 
+            className="size-16 animate-baap-glow"
+          />
+          <div>
+            <h1 className="text-4xl font-bold tracking-tight bg-baap-gradient bg-clip-text text-transparent">
+              Welcome to BaapGlow
+            </h1>
+            <p className="text-baap-600 font-semibold text-lg">
+              Professional Data Intelligence Platform
+            </p>
+          </div>
+        </div>
+        <p className="text-muted-foreground max-w-2xl mx-auto">
+          Transform your raw data into actionable insights with our advanced AI-powered cleaning and visualization tools. 
+          Start by uploading your CSV or Excel files to experience the power of professional data analytics.
         </p>
       </div>
       
       {/* Upload Area */}
-      <Card className="border-2 border-dashed border-border p-10">
+      <Card className="border-2 border-dashed border-baap-200 p-10 bg-gradient-to-br from-baap-50/50 to-transparent">
         <div 
-          className={`flex flex-col items-center justify-center gap-4 text-center ${isDragging ? 'bg-secondary/50 rounded-lg' : ''}`}
+          className={`flex flex-col items-center justify-center gap-4 text-center ${isDragging ? 'bg-baap-100/50 rounded-lg' : ''}`}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
         >
-          <div className="size-20 rounded-full bg-primary/10 flex items-center justify-center">
-            <FileSpreadsheet className="size-10 text-primary" />
+          <div className="size-20 rounded-full bg-baap-gradient flex items-center justify-center shadow-lg">
+            <FileSpreadsheet className="size-10 text-white" />
           </div>
           
           <div className="space-y-2">
-            <h3 className="text-xl font-semibold">Drag & Drop your file here</h3>
+            <h3 className="text-xl font-semibold text-baap-800">Drag & Drop your data files here</h3>
             <p className="text-sm text-muted-foreground">
               or click to browse for CSV (.csv) or Excel (.xlsx, .xls) files
+            </p>
+            <p className="text-xs text-baap-600 font-medium">
+              Powered by The Baap Company's AI Technology
             </p>
           </div>
           
@@ -232,10 +250,10 @@ const UploadPage: React.FC = () => {
               accept=".csv,.xlsx,.xls,text/csv,application/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
               onChange={handleFileInput}
             />
-            <Button asChild disabled={isProcessing}>
+            <Button asChild disabled={isProcessing} className="bg-baap-gradient hover:opacity-90 text-white shadow-lg">
               <label htmlFor="file-upload" className="cursor-pointer">
                 <Upload className="mr-2 size-4" />
-                {isProcessing ? 'Processing...' : 'Select CSV or Excel File'}
+                {isProcessing ? 'Processing...' : 'Select Data File'}
               </label>
             </Button>
           </div>
@@ -244,18 +262,18 @@ const UploadPage: React.FC = () => {
       
       {/* File Status */}
       {fileName && (
-        <Card className="p-4">
+        <Card className="p-4 border-baap-200">
           <div className="flex items-center gap-4">
-            <div className="size-12 bg-primary/10 rounded-lg flex items-center justify-center">
-              <FileSpreadsheet className="size-6 text-primary" />
+            <div className="size-12 bg-baap-gradient rounded-lg flex items-center justify-center">
+              <FileSpreadsheet className="size-6 text-white" />
             </div>
             
             <div className="flex-1">
-              <h3 className="font-medium">{fileName}</h3>
+              <h3 className="font-medium text-baap-800">{fileName}</h3>
               {isProcessing ? (
-                <div className="flex items-center gap-2 text-sm text-blue-600">
+                <div className="flex items-center gap-2 text-sm text-baap-600">
                   <AlertCircle className="size-4 animate-spin" />
-                  <span>Processing file...</span>
+                  <span>Processing with BaapGlow AI...</span>
                 </div>
               ) : previewData ? (
                 <div className="flex items-center gap-2 text-sm text-green-600">
@@ -277,25 +295,25 @@ const UploadPage: React.FC = () => {
       {previewData && previewData.rows.length > 0 && (
         <div className="space-y-4">
           <div>
-            <h2 className="text-xl font-semibold">Data Preview</h2>
+            <h2 className="text-xl font-semibold text-baap-800">Data Preview</h2>
             <p className="text-sm text-muted-foreground">Showing the first {previewData.rows.length} rows of your data</p>
           </div>
           
-          <div className="border rounded-lg overflow-auto">
+          <div className="border rounded-lg overflow-auto border-baap-200">
             <Table>
-              <TableHeader>
+              <TableHeader className="bg-baap-50">
                 <TableRow>
                   {previewData.columns.map((column, i) => (
-                    <TableHead key={i} className="whitespace-nowrap">
+                    <TableHead key={i} className="whitespace-nowrap text-baap-700 font-semibold">
                       {column.name}
-                      <span className="ml-1 text-xs text-muted-foreground">({column.type})</span>
+                      <span className="ml-1 text-xs text-baap-500">({column.type})</span>
                     </TableHead>
                   ))}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {previewData.rows.map((row, i) => (
-                  <TableRow key={i}>
+                  <TableRow key={i} className="hover:bg-baap-50/50">
                     {previewData.columns.map((column, j) => (
                       <TableCell key={j} className="truncate max-w-[200px]">
                         {row[column.name] || <span className="text-muted-foreground italic">empty</span>}
@@ -310,8 +328,8 @@ const UploadPage: React.FC = () => {
           <Separator />
           
           <div className="flex justify-end">
-            <Button onClick={handleNext}>
-              Next Step
+            <Button onClick={handleNext} className="bg-baap-gradient hover:opacity-90 text-white shadow-lg">
+              Continue to Data Cleaning
               <span className="ml-2">→</span>
             </Button>
           </div>

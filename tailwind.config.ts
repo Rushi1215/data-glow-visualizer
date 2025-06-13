@@ -19,6 +19,10 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['Afacad Flux', 'sans-serif'],
+        'afacad': ['Afacad Flux', 'sans-serif'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -63,22 +67,23 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        dataglow: {
-          50: "#f0f7ff",
-          100: "#e0effe",
-          200: "#bae0fd",
-          300: "#7dcafb",
-          400: "#39acf7",
-          500: "#1a91ea",
-          600: "#0973ca",
-          700: "#0a5ca4",
-          800: "#104e87",
-          900: "#134171",
-          950: "#0d2a4a",
+        baap: {
+          50: "#f8f9ff",
+          100: "#f0f2fe",
+          200: "#dde1fc",
+          300: "#c0c9f9",
+          400: "#9da9f4",
+          500: "#7b88ee",
+          600: "#6366f1",
+          700: "#5147dd",
+          800: "#4338ca",
+          900: "#3730a3",
+          950: "#1e1b4b",
         },
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+        'baap-gradient': 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%)',
         'glow-conic': 'conic-gradient(from 180deg at 50% 50%, #4f46e5 0deg, #8b5cf6 180deg, #10b981 360deg)',
       },
       borderRadius: {
@@ -103,12 +108,23 @@ export default {
           "0%": { opacity: "0" },
           "100%": { opacity: "1" },
         },
+        "baap-glow": {
+          "0%, 100%": { 
+            transform: "scale(1)",
+            opacity: "1"
+          },
+          "50%": { 
+            transform: "scale(1.05)",
+            opacity: "0.8"
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "pulse-light": "pulse-light 2s ease-in-out infinite",
         "fade-in": "fadeIn 0.5s ease-in",
+        "baap-glow": "baap-glow 3s ease-in-out infinite",
       },
     },
   },

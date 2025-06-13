@@ -42,7 +42,13 @@
 
   body {
     @apply bg-background text-foreground;
+    font-family: 'Afacad Flux', sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Afacad Flux', sans-serif;
+    font-weight: 600;
   }
 }
 
@@ -63,10 +69,26 @@
     content: "";
     position: absolute;
     inset: -5px;
-    background: linear-gradient(to right, #4f46e5, #8b5cf6, #10b981);
+    background: linear-gradient(to right, #6366f1, #8b5cf6, #a855f7);
     border-radius: var(--radius);
     z-index: -1;
     opacity: 0.5;
     filter: blur(15px);
+  }
+  
+  .baap-glow {
+    @apply relative;
+  }
+  
+  .baap-glow::before {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7);
+    border-radius: inherit;
+    z-index: -1;
+    opacity: 0.6;
+    filter: blur(10px);
+    animation: pulse 2s ease-in-out infinite;
   }
 }
