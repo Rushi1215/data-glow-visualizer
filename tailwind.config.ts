@@ -68,23 +68,23 @@ export default {
           ring: "hsl(var(--sidebar-ring))",
         },
         baap: {
-          50: "#f8f9ff",
-          100: "#f0f2fe",
-          200: "#dde1fc",
-          300: "#c0c9f9",
-          400: "#9da9f4",
-          500: "#7b88ee",
-          600: "#6366f1",
-          700: "#5147dd",
-          800: "#4338ca",
-          900: "#3730a3",
-          950: "#1e1b4b",
+          50: "#f8fafc",
+          100: "#f1f5f9",
+          200: "#e2e8f0",
+          300: "#cbd5e1",
+          400: "#94a3b8",
+          500: "#64748b",
+          600: "#475569",
+          700: "#334155",
+          800: "#1e293b",
+          900: "#0f172a",
+          950: "#020617",
         },
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'baap-gradient': 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%)',
-        'glow-conic': 'conic-gradient(from 180deg at 50% 50%, #4f46e5 0deg, #8b5cf6 180deg, #10b981 360deg)',
+        'baap-gradient': 'linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%)',
+        'glow-conic': 'conic-gradient(from 180deg at 50% 50%, #1e40af 0deg, #3b82f6 180deg, #60a5fa 360deg)',
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -102,7 +102,7 @@ export default {
         },
         "pulse-light": {
           "0%, 100%": { opacity: "1" },
-          "50%": { opacity: "0.7" },
+          "50%": { opacity: "0.8" },
         },
         fadeIn: {
           "0%": { opacity: "0" },
@@ -114,17 +114,17 @@ export default {
             opacity: "1"
           },
           "50%": { 
-            transform: "scale(1.05)",
-            opacity: "0.8"
+            transform: "scale(1.02)",
+            opacity: "0.9"
           },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "pulse-light": "pulse-light 2s ease-in-out infinite",
+        "pulse-light": "pulse-light 3s ease-in-out infinite",
         "fade-in": "fadeIn 0.5s ease-in",
-        "baap-glow": "baap-glow 3s ease-in-out infinite",
+        "baap-glow": "baap-glow 4s ease-in-out infinite",
       },
     },
   },

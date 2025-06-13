@@ -5,35 +5,35 @@
 
 @layer base {
   :root {
-    --background: 220 100% 98%;
-    --foreground: 240 10% 3.9%;
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card-foreground: 222.2 84% 4.9%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
+    --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 258 90% 66%;
-    --primary-foreground: 0 0% 98%;
+    --primary: 210 40% 30%;
+    --primary-foreground: 210 40% 98%;
 
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
 
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 84% 4.9%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive-foreground: 210 40% 98%;
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --ring: 210 40% 30%;
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;
   }
 
   * {
@@ -54,11 +54,11 @@
 
 @layer utilities {
   .data-card {
-    @apply bg-white rounded-xl shadow-md border border-border p-6 transition-all hover:shadow-lg;
+    @apply bg-white rounded-lg shadow-sm border border-border p-6 transition-all hover:shadow-md;
   }
   
   .glass-card {
-    @apply bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-border/50;
+    @apply bg-white/95 backdrop-blur-sm rounded-lg shadow-sm border border-border/50;
   }
   
   .data-glow {
@@ -68,12 +68,12 @@
   .data-glow::before {
     content: "";
     position: absolute;
-    inset: -5px;
-    background: linear-gradient(to right, #6366f1, #8b5cf6, #a855f7);
+    inset: -3px;
+    background: linear-gradient(to right, #1e40af, #3b82f6, #60a5fa);
     border-radius: var(--radius);
     z-index: -1;
-    opacity: 0.5;
-    filter: blur(15px);
+    opacity: 0.1;
+    filter: blur(8px);
   }
   
   .baap-glow {
@@ -83,12 +83,12 @@
   .baap-glow::before {
     content: "";
     position: absolute;
-    inset: -2px;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7);
+    inset: -1px;
+    background: linear-gradient(135deg, #1e40af, #3b82f6, #60a5fa);
     border-radius: inherit;
     z-index: -1;
-    opacity: 0.6;
-    filter: blur(10px);
-    animation: pulse 2s ease-in-out infinite;
+    opacity: 0.2;
+    filter: blur(6px);
+    animation: pulse 3s ease-in-out infinite;
   }
 }
