@@ -9,9 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ScatterChart, Scatter, PieChart, Pie, Cell } from 'recharts';
 import { generateDataStats, generateChartData } from '@/services/dataService';
-import { ArrowLeft, Table as TableIcon, BarChart2, PieChart as PieChartIcon, LineChart as LineChartIcon, ScatterChart as ScatterChartIcon, RefreshCw } from 'lucide-react';
-
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { ArrowLeft, Table as TableIcon, BarChart2, PieChart as PieChartIcon, LineChart as LineChartIcon, RefreshCw } from 'lucide-react';
 
 // Chart colors
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088fe', '#00C49F'];
@@ -33,16 +31,20 @@ const DashboardPage: React.FC = () => {
     
     try {
       const cleanedData = JSON.parse(cleanedDataStr);
+      console.log('Cleaned data loaded:', cleanedData);
       
       // Generate statistics and charts
       setTimeout(() => {
         const dataStats = generateDataStats(cleanedData.columns, cleanedData.rows);
         const chartData = generateChartData(cleanedData.columns, cleanedData.rows);
         
+        console.log('Generated stats:', dataStats);
+        console.log('Generated charts:', chartData);
+        
         setStats(dataStats);
         setCharts(chartData);
         setIsLoading(false);
-      }, 1000); // Slight delay for loading state
+      }, 1000);
     } catch (error) {
       console.error('Error generating dashboard:', error);
       toast.error('Error generating dashboard. Please try again.');
@@ -51,7 +53,6 @@ const DashboardPage: React.FC = () => {
   }, [navigate]);
   
   const handleRestart = () => {
-    // Clear stored data
     localStorage.removeItem('dataGlowFile');
     localStorage.removeItem('dataGlowFileName');
     localStorage.removeItem('dataGlowCleanedFile');
@@ -79,6 +80,27 @@ const DashboardPage: React.FC = () => {
     );
   }
 
+  if (!stats || !charts) {
+    return (
+      <div className="flex flex-col gap-8">
+        <div className="text-center space-y-2">
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard Error</h1>
+          <p className="text-muted-foreground">
+            Unable to generate dashboard from your data.
+          </p>
+        </div>
+        
+        <Card className="p-10 flex flex-col items-center justify-center gap-4 text-center">
+          <h3 className="text-xl font-semibold">No Data Available</h3>
+          <p className="text-muted-foreground">
+            Please go back and upload valid data.
+          </p>
+          <Button onClick={() => navigate('/')}>Start Over</Button>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-8">
       <div className="text-center space-y-2">
@@ -89,14 +111,14 @@ const DashboardPage: React.FC = () => {
       </div>
       
       <Tabs defaultValue="summary" onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full">
+        <TabsList className="grid grid-cols-4 w-full">
           <TabsTrigger value="summary" className="flex gap-2 items-center">
             <TableIcon className="h-4 w-4" />
             <span>Summary</span>
           </TabsTrigger>
           <TabsTrigger value="detailed" className="flex gap-2 items-center">
             <BarChart2 className="h-4 w-4" />
-            <span>Detailed Analysis</span>
+            <span>Detailed</span>
           </TabsTrigger>
           <TabsTrigger value="trends" className="flex gap-2 items-center">
             <LineChartIcon className="h-4 w-4" />
@@ -114,11 +136,11 @@ const DashboardPage: React.FC = () => {
           
           {/* Key metrics */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            <Card className="p-6 data-card border-l-4 border-l-blue-500">
+            <Card className="p-6 border-l-4 border-l-blue-500">
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Total Rows</p>
-                  <h3 className="text-2xl font-bold">{stats.totalRows}</h3>
+                  <h3 className="text-2xl font-bold">{stats.totalRows.toLocaleString()}</h3>
                 </div>
                 <div className="size-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
                   <TableIcon className="size-5" />
@@ -126,19 +148,19 @@ const DashboardPage: React.FC = () => {
               </div>
             </Card>
             
-            <Card className="p-6 data-card border-l-4 border-l-purple-500">
+            <Card className="p-6 border-l-4 border-l-purple-500">
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Total Columns</p>
                   <h3 className="text-2xl font-bold">{stats.totalColumns}</h3>
                 </div>
-                <div className="size-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 rotate-90">
-                  <TableIcon className="size-5" />
+                <div className="size-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
+                  <BarChart2 className="size-5" />
                 </div>
               </div>
             </Card>
             
-            <Card className="p-6 data-card border-l-4 border-l-amber-500">
+            <Card className="p-6 border-l-4 border-l-amber-500">
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Missing Values</p>
@@ -150,14 +172,14 @@ const DashboardPage: React.FC = () => {
               </div>
             </Card>
             
-            <Card className="p-6 data-card border-l-4 border-l-green-500">
+            <Card className="p-6 border-l-4 border-l-green-500">
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Duplicate Rows</p>
                   <h3 className="text-2xl font-bold">{stats.duplicateRows}</h3>
                 </div>
                 <div className="size-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
-                  <BarChart2 className="size-5" />
+                  <RefreshCw className="size-5" />
                 </div>
               </div>
             </Card>
@@ -167,33 +189,29 @@ const DashboardPage: React.FC = () => {
           <Card className="p-6">
             <h3 className="font-semibold mb-4">Key Data Distribution</h3>
             <div className="h-[300px]">
-              {charts?.barChart && (
-                <ChartContainer
-                  config={{
-                    primary: { theme: { light: '#8884d8', dark: '#8884d8' } }
-                  }}
-                >
+              {charts?.barChart ? (
+                <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={charts.barChart.data}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey={charts.barChart.xKey} />
                     <YAxis />
-                    <ChartTooltip
-                      content={
-                        <ChartTooltipContent />
-                      }
-                    />
+                    <Tooltip />
                     <Legend />
-                    <Bar dataKey={charts.barChart.yKey} fill="var(--color-primary)" />
+                    <Bar dataKey={charts.barChart.yKey} fill="#8884d8" />
                   </BarChart>
-                </ChartContainer>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex items-center justify-center">
+                  <p className="text-muted-foreground">No chart data available</p>
+                </div>
               )}
             </div>
           </Card>
           
           {/* Column Information */}
           {stats?.columnsInfo && (
-            <Card className="data-card">
-              <h3 className="font-semibold p-4">Column Information</h3>
+            <Card className="p-6">
+              <h3 className="font-semibold mb-4">Column Information</h3>
               <div className="overflow-auto">
                 <Table>
                   <TableHeader>
@@ -226,8 +244,8 @@ const DashboardPage: React.FC = () => {
           
           {/* Statistical Summary */}
           {stats?.summary && stats.summary.length > 0 && (
-            <Card className="data-card">
-              <h3 className="font-semibold p-4 bg-slate-50 dark:bg-slate-900">Statistical Summary</h3>
+            <Card className="p-6">
+              <h3 className="font-semibold mb-4">Statistical Summary</h3>
               <div className="overflow-auto">
                 <Table>
                   <TableHeader>
@@ -259,54 +277,18 @@ const DashboardPage: React.FC = () => {
           
           {/* Scatter Plot */}
           {charts?.scatterChart && (
-            <Card className="p-4 data-card border border-slate-200">
+            <Card className="p-6">
               <h3 className="font-semibold mb-4">{charts.scatterChart.title}</h3>
               <div className="h-[350px]">
-                <ChartContainer
-                  config={{
-                    primary: { theme: { light: '#8884d8', dark: '#8884d8' } }
-                  }}
-                >
-                  <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <ScatterChart data={charts.scatterChart.data}>
                     <CartesianGrid />
                     <XAxis type="number" dataKey="x" name={charts.scatterChart.xLabel} />
                     <YAxis type="number" dataKey="y" name={charts.scatterChart.yLabel} />
-                    <ChartTooltip 
-                      content={
-                        <ChartTooltipContent />
-                      }
-                    />
-                    <Legend />
-                    <Scatter name="Data Points" data={charts.scatterChart.data} fill="var(--color-primary)" />
+                    <Tooltip cursor={{ strokeDasharray: '3 3' }} />
+                    <Scatter name="Data Points" data={charts.scatterChart.data} fill="#8884d8" />
                   </ScatterChart>
-                </ChartContainer>
-              </div>
-            </Card>
-          )}
-          
-          {/* Additional bar chart if available */}
-          {charts?.barChart && (
-            <Card className="p-4 data-card border border-slate-200">
-              <h3 className="font-semibold mb-4">Detailed {charts.barChart.title}</h3>
-              <div className="h-[300px]">
-                <ChartContainer
-                  config={{
-                    primary: { theme: { light: '#82ca9d', dark: '#82ca9d' } }
-                  }}
-                >
-                  <BarChart data={charts.barChart.data}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey={charts.barChart.xKey} />
-                    <YAxis />
-                    <ChartTooltip
-                      content={
-                        <ChartTooltipContent />
-                      }
-                    />
-                    <Legend />
-                    <Bar dataKey={charts.barChart.yKey} fill="var(--color-primary)" />
-                  </BarChart>
-                </ChartContainer>
+                </ResponsiveContainer>
               </div>
             </Card>
           )}
@@ -314,42 +296,31 @@ const DashboardPage: React.FC = () => {
         
         {/* Trends Dashboard */}
         <TabsContent value="trends" className="space-y-6">
-          <h2 className="text-2xl font-semibold">Trend & Time Series Analysis</h2>
+          <h2 className="text-2xl font-semibold">Trend Analysis</h2>
           
           {/* Line Chart */}
           {charts?.lineChart ? (
-            <Card className="p-6 data-card border border-slate-200">
+            <Card className="p-6">
               <h3 className="font-semibold mb-4">{charts.lineChart.title}</h3>
               <div className="h-[350px]">
-                <ChartContainer
-                  config={{
-                    primary: { theme: { light: '#8884d8', dark: '#8884d8' } }
-                  }}
-                >
+                <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={charts.lineChart.data}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey={charts.lineChart.xKey} />
                     <YAxis />
-                    <ChartTooltip
-                      content={
-                        <ChartTooltipContent />
-                      }
-                    />
+                    <Tooltip />
                     <Legend />
                     <Line 
                       type="monotone" 
                       dataKey={charts.lineChart.yKey} 
-                      stroke="var(--color-primary)" 
+                      stroke="#8884d8" 
                       strokeWidth={2} 
                       dot={{ r: 3 }} 
                       activeDot={{ r: 6 }}
                     />
                   </LineChart>
-                </ChartContainer>
+                </ResponsiveContainer>
               </div>
-              <p className="text-sm text-muted-foreground mt-4">
-                This chart shows trends over time, helping identify patterns and seasonal variations in your data.
-              </p>
             </Card>
           ) : (
             <Card className="p-6 flex flex-col items-center justify-center gap-4 text-center">
@@ -357,83 +328,38 @@ const DashboardPage: React.FC = () => {
               <h3 className="text-lg font-medium">No Time Series Data Available</h3>
               <p className="text-muted-foreground">
                 Your dataset doesn't contain suitable date/time columns for trend analysis.
-                Try uploading data with date columns to see trends over time.
               </p>
             </Card>
           )}
-
-          {/* Comparison area */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Left chart: Categorical comparison */}
-            <Card className="p-4 data-card">
-              <h3 className="font-semibold mb-4">Category Distribution</h3>
+          
+          {/* Additional bar chart */}
+          {charts?.barChart && (
+            <Card className="p-6">
+              <h3 className="font-semibold mb-4">Category Trends</h3>
               <div className="h-[300px]">
-                {charts?.barChart ? (
-                  <ChartContainer
-                    config={{
-                      primary: { theme: { light: '#0088fe', dark: '#0088fe' } }
-                    }}
-                  >
-                    <BarChart data={charts.barChart.data}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey={charts.barChart.xKey} />
-                      <YAxis />
-                      <ChartTooltip
-                        content={
-                          <ChartTooltipContent />
-                        }
-                      />
-                      <Bar dataKey={charts.barChart.yKey} fill="var(--color-primary)" />
-                    </BarChart>
-                  </ChartContainer>
-                ) : (
-                  <div className="h-full flex items-center justify-center">
-                    <p className="text-muted-foreground">No categorical data available</p>
-                  </div>
-                )}
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={charts.barChart.data}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey={charts.barChart.xKey} />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey={charts.barChart.yKey} fill="#82ca9d" />
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
             </Card>
-            
-            {/* Right chart: Numeric comparison */}
-            <Card className="p-4 data-card">
-              <h3 className="font-semibold mb-4">Data Correlation</h3>
-              <div className="h-[300px]">
-                {charts?.scatterChart ? (
-                  <ChartContainer
-                    config={{
-                      primary: { theme: { light: '#00C49F', dark: '#00C49F' } }
-                    }}
-                  >
-                    <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-                      <CartesianGrid />
-                      <XAxis type="number" dataKey="x" name={charts.scatterChart.xLabel} />
-                      <YAxis type="number" dataKey="y" name={charts.scatterChart.yLabel} />
-                      <ChartTooltip
-                        content={
-                          <ChartTooltipContent />
-                        }
-                      />
-                      <Scatter name="Correlation" data={charts.scatterChart.data} fill="var(--color-primary)" />
-                    </ScatterChart>
-                  </ChartContainer>
-                ) : (
-                  <div className="h-full flex items-center justify-center">
-                    <p className="text-muted-foreground">No numeric correlation data available</p>
-                  </div>
-                )}
-              </div>
-            </Card>
-          </div>
+          )}
         </TabsContent>
         
         {/* Distribution Dashboard */}
         <TabsContent value="distribution" className="space-y-6">
           <h2 className="text-2xl font-semibold">Data Distribution Analysis</h2>
           
-          {/* Pie Chart */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Pie Chart */}
             {charts?.pieChart ? (
-              <Card className="p-4 data-card">
+              <Card className="p-6">
                 <h3 className="font-semibold mb-4">{charts.pieChart.title}</h3>
                 <div className="h-[350px]">
                   <ResponsiveContainer width="100%" height="100%">
@@ -468,19 +394,19 @@ const DashboardPage: React.FC = () => {
               </Card>
             )}
             
-            {/* Statistical highlights */}
-            <Card className="p-4 data-card">
+            {/* Distribution highlights */}
+            <Card className="p-6">
               <h3 className="font-semibold mb-4">Distribution Highlights</h3>
               <div className="space-y-4">
-                {stats?.columnsInfo && stats.columnsInfo.slice(0, 4).map((col: any, i: number) => (
-                  <div key={i} className="border-b pb-3">
+                {stats?.columnsInfo && stats.columnsInfo.slice(0, 6).map((col: any, i: number) => (
+                  <div key={i} className="border-b pb-3 last:border-b-0">
                     <div className="flex justify-between mb-1">
                       <span className="font-medium">{col.name}</span>
                       <span className="text-sm text-muted-foreground">{col.type}</span>
                     </div>
-                    <div className="w-full bg-slate-200 rounded-full h-2">
+                    <div className="w-full bg-muted rounded-full h-2">
                       <div 
-                        className="bg-blue-600 h-2 rounded-full" 
+                        className="bg-primary h-2 rounded-full" 
                         style={{ width: `${Math.min(100, (col.distinct / (stats.totalRows || 1)) * 100)}%` }}
                       ></div>
                     </div>
@@ -494,9 +420,9 @@ const DashboardPage: React.FC = () => {
             </Card>
           </div>
           
-          {/* Bar Chart */}
+          {/* Bar Chart for distribution */}
           {charts?.barChart && (
-            <Card className="p-4 data-card">
+            <Card className="p-6">
               <h3 className="font-semibold mb-4">Frequency Distribution</h3>
               <div className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
@@ -506,7 +432,7 @@ const DashboardPage: React.FC = () => {
                     <YAxis />
                     <Tooltip />
                     <Legend />
-                    <Bar dataKey={charts.barChart.yKey} fill="#ff8042">
+                    <Bar dataKey={charts.barChart.yKey}>
                       {charts.barChart.data.map((entry: any, index: number) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
@@ -524,7 +450,7 @@ const DashboardPage: React.FC = () => {
       <div className="flex justify-between">
         <Button variant="outline" onClick={() => navigate('/clean')}>
           <ArrowLeft className="mr-2 size-4" />
-          Back
+          Back to Clean
         </Button>
         <Button variant="default" onClick={handleRestart}>
           <RefreshCw className="mr-2 size-4" />

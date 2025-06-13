@@ -169,6 +169,9 @@ export const cleanData = (columns: DataColumn[], rows: Record<string, any>[]): {
 
 // Generate data statistics for the dashboard
 export const generateDataStats = (columns: DataColumn[], rows: Record<string, any>[]): DataStats => {
+  console.log('Generating stats for columns:', columns);
+  console.log('Number of rows:', rows.length);
+  
   // Calculate basic statistics
   const totalRows = rows.length;
   const totalColumns = columns.length;
@@ -234,6 +237,8 @@ export const generateDataStats = (columns: DataColumn[], rows: Record<string, an
       };
     });
   
+  console.log('Generated stats:', { totalRows, totalColumns, missingValues, duplicateRows });
+  
   return {
     totalRows,
     totalColumns,
@@ -246,16 +251,24 @@ export const generateDataStats = (columns: DataColumn[], rows: Record<string, an
 
 // Generate visualization data for charts
 export const generateChartData = (columns: DataColumn[], rows: Record<string, any>[]) => {
+  console.log('Generating chart data for columns:', columns.map(c => `${c.name} (${c.type})`));
+  
   // Find a numeric column and a categorical column for charts
   const numericColumns = columns.filter(col => col.type === 'number');
   const categoricalColumns = columns.filter(col => col.type === 'string' || col.type === 'boolean');
   const dateColumns = columns.filter(col => col.type === 'date');
+  
+  console.log('Found numeric columns:', numericColumns.length);
+  console.log('Found categorical columns:', categoricalColumns.length);
+  console.log('Found date columns:', dateColumns.length);
   
   const charts: Record<string, any> = {};
   
   // Bar Chart (categorical vs count or sum)
   if (categoricalColumns.length > 0) {
     const categoryCol = categoricalColumns[0].name;
+    console.log('Creating bar chart for:', categoryCol);
+    
     // Count frequency of each category
     const categoryMap = new Map();
     
@@ -265,13 +278,52 @@ export const generateChartData = (columns: DataColumn[], rows: Record<string, an
     });
     
     const barData = Array.from(categoryMap.entries())
-      .map(([category, count]) => ({ category, count }))
+      .map(([category, count]) => ({ 
+        [categoryCol]: category, 
+        count: count,
+        category: category // fallback key
+      }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 10); // Top 10
+    
+    console.log('Bar chart data:', barData);
     
     charts.barChart = {
       title: `Count by ${categoryCol}`,
       data: barData,
+      xKey: 'category',
+      yKey: 'count'
+    };
+  } else if (numericColumns.length > 0) {
+    // If no categorical columns, create a simple numeric distribution
+    const numericCol = numericColumns[0].name;
+    console.log('Creating numeric distribution for:', numericCol);
+    
+    const values = rows
+      .map(row => parseFloat(row[numericCol]))
+      .filter(v => !isNaN(v))
+      .sort((a, b) => a - b);
+    
+    // Create bins for histogram
+    const binCount = Math.min(10, Math.ceil(Math.sqrt(values.length)));
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const binSize = (max - min) / binCount;
+    
+    const bins = Array.from({ length: binCount }, (_, i) => ({
+      range: `${(min + i * binSize).toFixed(1)}-${(min + (i + 1) * binSize).toFixed(1)}`,
+      count: 0,
+      category: `${(min + i * binSize).toFixed(1)}-${(min + (i + 1) * binSize).toFixed(1)}`
+    }));
+    
+    values.forEach(value => {
+      const binIndex = Math.min(Math.floor((value - min) / binSize), binCount - 1);
+      if (bins[binIndex]) bins[binIndex].count++;
+    });
+    
+    charts.barChart = {
+      title: `Distribution of ${numericCol}`,
+      data: bins,
       xKey: 'category',
       yKey: 'count'
     };
@@ -281,6 +333,7 @@ export const generateChartData = (columns: DataColumn[], rows: Record<string, an
   if (dateColumns.length > 0 && numericColumns.length > 0) {
     const dateCol = dateColumns[0].name;
     const numericCol = numericColumns[0].name;
+    console.log('Creating line chart for:', dateCol, 'vs', numericCol);
     
     // Group by date and average the numeric values
     const dateMap = new Map();
@@ -301,10 +354,14 @@ export const generateChartData = (columns: DataColumn[], rows: Record<string, an
     
     const lineData = Array.from(dateMap.entries())
       .map(([date, { sum, count }]) => ({
-        date,
+        [dateCol]: date,
+        [numericCol]: sum / count,
+        date: date,
         value: sum / count
       }))
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    
+    console.log('Line chart data:', lineData.slice(0, 3));
     
     charts.lineChart = {
       title: `${numericCol} Over Time`,
@@ -318,6 +375,7 @@ export const generateChartData = (columns: DataColumn[], rows: Record<string, an
   if (numericColumns.length >= 2) {
     const xCol = numericColumns[0].name;
     const yCol = numericColumns[1].name;
+    console.log('Creating scatter chart for:', xCol, 'vs', yCol);
     
     const scatterData = rows
       .filter(row => !isNaN(parseFloat(row[xCol])) && !isNaN(parseFloat(row[yCol])))
@@ -326,6 +384,8 @@ export const generateChartData = (columns: DataColumn[], rows: Record<string, an
         y: parseFloat(row[yCol])
       }))
       .slice(0, 100); // Limit points for performance
+    
+    console.log('Scatter chart data points:', scatterData.length);
     
     charts.scatterChart = {
       title: `${xCol} vs ${yCol}`,
@@ -340,6 +400,8 @@ export const generateChartData = (columns: DataColumn[], rows: Record<string, an
   // Pie Chart (categorical distribution)
   if (categoricalColumns.length > 0) {
     const categoryCol = categoricalColumns[categoricalColumns.length > 1 ? 1 : 0].name;
+    console.log('Creating pie chart for:', categoryCol);
+    
     const categoryMap = new Map();
     
     rows.forEach(row => {
@@ -352,11 +414,14 @@ export const generateChartData = (columns: DataColumn[], rows: Record<string, an
       .sort((a, b) => b.value - a.value)
       .slice(0, 5); // Top 5 categories
     
+    console.log('Pie chart data:', pieData);
+    
     charts.pieChart = {
       title: `Distribution of ${categoryCol}`,
       data: pieData
     };
   }
   
+  console.log('Generated charts:', Object.keys(charts));
   return charts;
 };
