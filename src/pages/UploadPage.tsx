@@ -45,13 +45,21 @@ const UploadPage: React.FC = () => {
   const handleFile = useCallback((file: File) => {
     console.log('Processing file:', file.name, file.type, file.size);
     
-    // Validate file type
-    const validTypes = ['text/csv', 'application/csv', 'text/plain'];
+    // Validate file type - now including Excel files
+    const validTypes = [
+      'text/csv', 
+      'application/csv', 
+      'text/plain',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+      'application/vnd.ms-excel', // .xls
+      'application/excel'
+    ];
     const fileExtension = file.name.split('.').pop()?.toLowerCase();
+    const validExtensions = ['csv', 'xlsx', 'xls'];
     
     // Check both MIME type and extension
-    if (!validTypes.includes(file.type) && fileExtension !== 'csv') {
-      toast.error('Please upload a CSV file only. Excel files are not supported yet.');
+    if (!validTypes.includes(file.type) && !validExtensions.includes(fileExtension || '')) {
+      toast.error('Please upload a CSV or Excel file (.csv, .xlsx, .xls)');
       return;
     }
     
@@ -64,13 +72,20 @@ const UploadPage: React.FC = () => {
     setFileName(file.name);
     setIsProcessing(true);
     
-    // Read file contents
+    // Handle Excel files differently than CSV
+    if (fileExtension === 'xlsx' || fileExtension === 'xls' || file.type.includes('spreadsheet') || file.type.includes('excel')) {
+      handleExcelFile(file);
+    } else {
+      handleCSVFile(file);
+    }
+  }, []);
+  
+  const handleCSVFile = (file: File) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
         const fileContent = e.target?.result as string;
-        console.log('File content loaded, length:', fileContent.length);
-        console.log('First 200 characters:', fileContent.substring(0, 200));
+        console.log('CSV file content loaded, length:', fileContent.length);
         
         // Check if file content looks like binary
         if (fileContent.includes('\0') || fileContent.includes('�')) {
@@ -79,31 +94,10 @@ const UploadPage: React.FC = () => {
           return;
         }
         
-        // Parse CSV data
-        const parsedData = parseFileData(fileContent);
-        console.log('Parsed data:', parsedData);
-        
-        if (parsedData.rows.length === 0) {
-          toast.error('No data found in file. Please check the CSV format.');
-          setIsProcessing(false);
-          return;
-        }
-        
-        // Save to localStorage (simulating backend)
-        localStorage.setItem('dataGlowFile', fileContent);
-        localStorage.setItem('dataGlowFileName', file.name);
-        
-        // Update preview
-        setPreviewData({
-          columns: parsedData.columns,
-          rows: parsedData.rows.slice(0, 5) // Preview first 5 rows
-        });
-        
-        toast.success(`File uploaded successfully! Found ${parsedData.rows.length} rows and ${parsedData.columns.length} columns.`);
-        setIsProcessing(false);
+        processFileContent(fileContent, file.name);
       } catch (error) {
-        console.error('Error reading file:', error);
-        toast.error('Error parsing file. Please check if it\'s a valid CSV format.');
+        console.error('Error reading CSV file:', error);
+        toast.error('Error parsing CSV file. Please check if it\'s a valid format.');
         setIsProcessing(false);
       }
     };
@@ -114,7 +108,84 @@ const UploadPage: React.FC = () => {
     };
     
     reader.readAsText(file, 'UTF-8');
-  }, []);
+  };
+  
+  const handleExcelFile = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const arrayBuffer = e.target?.result as ArrayBuffer;
+        console.log('Excel file loaded, size:', arrayBuffer.byteLength);
+        
+        // Parse Excel file using xlsx library
+        import('xlsx').then((XLSX) => {
+          const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          
+          // Convert to CSV format
+          const csvContent = XLSX.utils.sheet_to_csv(worksheet);
+          console.log('Converted Excel to CSV, length:', csvContent.length);
+          
+          if (!csvContent.trim()) {
+            toast.error('No data found in Excel file. Please check the file format.');
+            setIsProcessing(false);
+            return;
+          }
+          
+          processFileContent(csvContent, file.name);
+        }).catch((error) => {
+          console.error('Error parsing Excel file:', error);
+          toast.error('Error parsing Excel file. Please check if it\'s a valid format.');
+          setIsProcessing(false);
+        });
+      } catch (error) {
+        console.error('Error reading Excel file:', error);
+        toast.error('Error reading Excel file. Please try again.');
+        setIsProcessing(false);
+      }
+    };
+    
+    reader.onerror = () => {
+      toast.error('Error reading Excel file. Please try again.');
+      setIsProcessing(false);
+    };
+    
+    reader.readAsArrayBuffer(file);
+  };
+  
+  const processFileContent = (fileContent: string, fileName: string) => {
+    try {
+      console.log('Processing file content, length:', fileContent.length);
+      
+      // Parse the data
+      const parsedData = parseFileData(fileContent);
+      console.log('Parsed data:', parsedData);
+      
+      if (parsedData.rows.length === 0) {
+        toast.error('No data found in file. Please check the file format.');
+        setIsProcessing(false);
+        return;
+      }
+      
+      // Save to localStorage (simulating backend)
+      localStorage.setItem('dataGlowFile', fileContent);
+      localStorage.setItem('dataGlowFileName', fileName);
+      
+      // Update preview
+      setPreviewData({
+        columns: parsedData.columns,
+        rows: parsedData.rows.slice(0, 5) // Preview first 5 rows
+      });
+      
+      toast.success(`File uploaded successfully! Found ${parsedData.rows.length} rows and ${parsedData.columns.length} columns.`);
+      setIsProcessing(false);
+    } catch (error) {
+      console.error('Error processing file:', error);
+      toast.error('Error parsing file. Please check if it\'s a valid format.');
+      setIsProcessing(false);
+    }
+  };
   
   const handleNext = () => {
     if (!localStorage.getItem('dataGlowFile')) {
@@ -130,7 +201,7 @@ const UploadPage: React.FC = () => {
       <div className="text-center space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Upload Your Data</h1>
         <p className="text-muted-foreground">
-          Start by uploading a CSV file to clean and visualize your data
+          Start by uploading a CSV or Excel file to clean and visualize your data
         </p>
       </div>
       
@@ -147,9 +218,9 @@ const UploadPage: React.FC = () => {
           </div>
           
           <div className="space-y-2">
-            <h3 className="text-xl font-semibold">Drag & Drop your CSV file here</h3>
+            <h3 className="text-xl font-semibold">Drag & Drop your file here</h3>
             <p className="text-sm text-muted-foreground">
-              or click to browse for a CSV file (text format only)
+              or click to browse for CSV (.csv) or Excel (.xlsx, .xls) files
             </p>
           </div>
           
@@ -158,13 +229,13 @@ const UploadPage: React.FC = () => {
               type="file"
               id="file-upload"
               className="hidden"
-              accept=".csv,text/csv,application/csv"
+              accept=".csv,.xlsx,.xls,text/csv,application/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
               onChange={handleFileInput}
             />
             <Button asChild disabled={isProcessing}>
               <label htmlFor="file-upload" className="cursor-pointer">
                 <Upload className="mr-2 size-4" />
-                {isProcessing ? 'Processing...' : 'Select CSV File'}
+                {isProcessing ? 'Processing...' : 'Select CSV or Excel File'}
               </label>
             </Button>
           </div>
