@@ -26,20 +26,42 @@ export interface DataStats {
   }[];
 }
 
-// Helper to parse CSV or Excel data
+// Improved CSV parsing function
 export const parseFileData = (fileContent: string): { columns: DataColumn[], rows: Record<string, any>[] } => {
   try {
-    // Simple CSV parsing (would use proper library in real app)
-    const lines = fileContent.split('\n');
-    if (lines.length < 2) {
-      throw new Error("File appears to be empty or invalid");
+    console.log('Starting to parse file content...');
+    
+    // Clean the file content
+    const cleanContent = fileContent.trim();
+    if (!cleanContent) {
+      throw new Error("File appears to be empty");
     }
 
-    // Parse header row
-    const headerLine = lines[0].trim();
-    const headers = headerLine.split(',').map(h => h.trim().replace(/"/g, ''));
+    // Split into lines and filter out empty lines
+    const lines = cleanContent.split(/\r?\n/).filter(line => line.trim());
+    console.log('Found lines:', lines.length);
     
-    // Determine column types (basic inference)
+    if (lines.length < 2) {
+      throw new Error("File must contain at least a header row and one data row");
+    }
+
+    // Parse header row - handle both comma and semicolon separators
+    const headerLine = lines[0].trim();
+    let separator = ',';
+    if (headerLine.includes(';') && !headerLine.includes(',')) {
+      separator = ';';
+    }
+    
+    console.log('Using separator:', separator);
+    
+    // Parse CSV with proper quote handling
+    const headers = parseCSVLine(headerLine, separator);
+    console.log('Headers found:', headers);
+    
+    if (headers.length === 0) {
+      throw new Error("No columns found in header row");
+    }
+
     const columns: DataColumn[] = [];
     const rows: Record<string, any>[] = [];
 
@@ -48,30 +70,38 @@ export const parseFileData = (fileContent: string): { columns: DataColumn[], row
       const line = lines[i].trim();
       if (!line) continue;
       
-      // Split by comma, respecting quotes (simplified)
-      const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
+      const values = parseCSVLine(line, separator);
       const row: Record<string, any> = {};
       
-      values.forEach((value, index) => {
-        const header = headers[index] || `column_${index}`;
+      // Ensure we don't have more values than headers
+      const numCols = Math.min(values.length, headers.length);
+      
+      for (let j = 0; j < numCols; j++) {
+        const header = headers[j] || `column_${j}`;
+        const value = values[j] || '';
         row[header] = value;
         
         // Infer types on first data row
         if (i === 1) {
           let type: 'string' | 'number' | 'date' | 'boolean' = 'string';
           
-          // Check if number
-          if (!isNaN(Number(value)) && value !== '') {
-            type = 'number';
-          }
-          // Check if date (basic check)
-          else if (/^\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}$/.test(value) ||
-                  /^\d{4}[\/\-\.]\d{1,2}[\/\-\.]\d{1,2}$/.test(value)) {
-            type = 'date';
-          }
-          // Check if boolean
-          else if (['true', 'false', '0', '1', 'yes', 'no'].includes(value.toLowerCase())) {
-            type = 'boolean';
+          if (value && value.trim()) {
+            const trimmedValue = value.trim();
+            
+            // Check if number (including decimals)
+            if (/^-?\d*\.?\d+$/.test(trimmedValue)) {
+              type = 'number';
+            }
+            // Check if date (various formats)
+            else if (/^\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}$/.test(trimmedValue) ||
+                    /^\d{4}[\/\-\.]\d{1,2}[\/\-\.]\d{1,2}$/.test(trimmedValue) ||
+                    /^\d{4}-\d{2}-\d{2}$/.test(trimmedValue)) {
+              type = 'date';
+            }
+            // Check if boolean
+            else if (['true', 'false', '0', '1', 'yes', 'no', 'y', 'n'].includes(trimmedValue.toLowerCase())) {
+              type = 'boolean';
+            }
           }
           
           columns.push({
@@ -79,17 +109,59 @@ export const parseFileData = (fileContent: string): { columns: DataColumn[], row
             type
           });
         }
-      });
+      }
       
       rows.push(row);
     }
     
+    console.log('Parsed successfully:', { columns: columns.length, rows: rows.length });
+    
     return { columns, rows };
   } catch (error) {
     console.error("Error parsing file:", error);
-    toast.error("Failed to parse file. Please check the file format.");
+    toast.error(`Failed to parse file: ${error.message}`);
     return { columns: [], rows: [] };
   }
+};
+
+// Helper function to properly parse CSV lines with quote handling
+const parseCSVLine = (line: string, separator: string = ','): string[] => {
+  const result: string[] = [];
+  let current = '';
+  let inQuotes = false;
+  
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    const nextChar = line[i + 1];
+    
+    if (char === '"') {
+      if (inQuotes && nextChar === '"') {
+        // Escaped quote
+        current += '"';
+        i++; // Skip next quote
+      } else {
+        // Toggle quote state
+        inQuotes = !inQuotes;
+      }
+    } else if (char === separator && !inQuotes) {
+      // Field separator outside quotes
+      result.push(current.trim());
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  
+  // Add the last field
+  result.push(current.trim());
+  
+  // Clean up quotes from fields
+  return result.map(field => {
+    if (field.startsWith('"') && field.endsWith('"')) {
+      return field.slice(1, -1);
+    }
+    return field;
+  });
 };
 
 // Clean data functionality

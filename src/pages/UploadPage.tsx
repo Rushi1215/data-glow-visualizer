@@ -14,6 +14,7 @@ const UploadPage: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [previewData, setPreviewData] = useState<{ columns: DataColumn[], rows: Record<string, any>[] } | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   
   const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -42,27 +43,49 @@ const UploadPage: React.FC = () => {
   }, []);
   
   const handleFile = useCallback((file: File) => {
+    console.log('Processing file:', file.name, file.type, file.size);
+    
     // Validate file type
-    const validTypes = ['text/csv', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
+    const validTypes = ['text/csv', 'application/csv', 'text/plain'];
     const fileExtension = file.name.split('.').pop()?.toLowerCase();
     
-    if (!validTypes.includes(file.type) && !['csv', 'xlsx', 'xls'].includes(fileExtension || '')) {
-      toast.error('Please upload a CSV or Excel file');
+    // Check both MIME type and extension
+    if (!validTypes.includes(file.type) && fileExtension !== 'csv') {
+      toast.error('Please upload a CSV file only. Excel files are not supported yet.');
+      return;
+    }
+    
+    // Check file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('File size must be less than 10MB');
       return;
     }
     
     setFileName(file.name);
+    setIsProcessing(true);
     
     // Read file contents
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
         const fileContent = e.target?.result as string;
+        console.log('File content loaded, length:', fileContent.length);
+        console.log('First 200 characters:', fileContent.substring(0, 200));
+        
+        // Check if file content looks like binary
+        if (fileContent.includes('\0') || fileContent.includes('�')) {
+          toast.error('This appears to be a binary file. Please upload a text-based CSV file.');
+          setIsProcessing(false);
+          return;
+        }
         
         // Parse CSV data
         const parsedData = parseFileData(fileContent);
+        console.log('Parsed data:', parsedData);
+        
         if (parsedData.rows.length === 0) {
-          toast.error('No data found in file');
+          toast.error('No data found in file. Please check the CSV format.');
+          setIsProcessing(false);
           return;
         }
         
@@ -76,13 +99,21 @@ const UploadPage: React.FC = () => {
           rows: parsedData.rows.slice(0, 5) // Preview first 5 rows
         });
         
-        toast.success('File uploaded successfully');
+        toast.success(`File uploaded successfully! Found ${parsedData.rows.length} rows and ${parsedData.columns.length} columns.`);
+        setIsProcessing(false);
       } catch (error) {
         console.error('Error reading file:', error);
-        toast.error('Error parsing file. Please check the format.');
+        toast.error('Error parsing file. Please check if it\'s a valid CSV format.');
+        setIsProcessing(false);
       }
     };
-    reader.readAsText(file);
+    
+    reader.onerror = () => {
+      toast.error('Error reading file. Please try again.');
+      setIsProcessing(false);
+    };
+    
+    reader.readAsText(file, 'UTF-8');
   }, []);
   
   const handleNext = () => {
@@ -99,7 +130,7 @@ const UploadPage: React.FC = () => {
       <div className="text-center space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Upload Your Data</h1>
         <p className="text-muted-foreground">
-          Start by uploading a CSV or Excel file to clean and visualize your data
+          Start by uploading a CSV file to clean and visualize your data
         </p>
       </div>
       
@@ -116,9 +147,9 @@ const UploadPage: React.FC = () => {
           </div>
           
           <div className="space-y-2">
-            <h3 className="text-xl font-semibold">Drag & Drop your file here</h3>
+            <h3 className="text-xl font-semibold">Drag & Drop your CSV file here</h3>
             <p className="text-sm text-muted-foreground">
-              or click to browse for a CSV or Excel file
+              or click to browse for a CSV file (text format only)
             </p>
           </div>
           
@@ -127,13 +158,13 @@ const UploadPage: React.FC = () => {
               type="file"
               id="file-upload"
               className="hidden"
-              accept=".csv,.xls,.xlsx"
+              accept=".csv,text/csv,application/csv"
               onChange={handleFileInput}
             />
-            <Button asChild>
+            <Button asChild disabled={isProcessing}>
               <label htmlFor="file-upload" className="cursor-pointer">
                 <Upload className="mr-2 size-4" />
-                Select File
+                {isProcessing ? 'Processing...' : 'Select CSV File'}
               </label>
             </Button>
           </div>
@@ -150,15 +181,20 @@ const UploadPage: React.FC = () => {
             
             <div className="flex-1">
               <h3 className="font-medium">{fileName}</h3>
-              {previewData ? (
+              {isProcessing ? (
+                <div className="flex items-center gap-2 text-sm text-blue-600">
+                  <AlertCircle className="size-4 animate-spin" />
+                  <span>Processing file...</span>
+                </div>
+              ) : previewData ? (
                 <div className="flex items-center gap-2 text-sm text-green-600">
                   <CheckCircle className="size-4" />
-                  <span>Loaded {previewData.rows.length} preview rows</span>
+                  <span>Loaded {previewData.rows.length} preview rows from {previewData.columns.length} columns</span>
                 </div>
               ) : (
                 <div className="flex items-center gap-2 text-sm text-amber-600">
                   <AlertCircle className="size-4" />
-                  <span>Processing...</span>
+                  <span>Failed to process</span>
                 </div>
               )}
             </div>
